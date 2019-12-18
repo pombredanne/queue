@@ -511,7 +511,18 @@ function method.start()
         })
     end
 
-    _queue:pairs():each(recreate_tube)
+    for _, tube_tuple in _queue:pairs() do
+        local space_name = tube_tuple[3]
+        tube = recreate_tube(tube_tuple)
+        local space = box.space[space_name]
+        for _, task_tuple in space:pairs() do
+            -- Release all taken tasks
+            local tid, task_state = task_tuple:unpack()
+            if task_state == state.TAKEN then
+                tube.raw:release(tid, {})
+            end
+        end
+    end
 
     session.on_disconnect(queue._on_consumer_disconnect)
     return queue
